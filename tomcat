@@ -12,46 +12,15 @@ tomcat_pid() {
 }
 
 function start () {
-	pid=$(tomcat_pid)
-	if [ -n "$pid" ]
-		then
-		echo "Tomcat is already running (pid: $pid)"
-	else
-        echo "Starting Tomcat..."
-        sh $TOMCAT_HOME/bin/startup.sh
-  	fi
-
-  	return 0
+	echo "Starting tomcat"
+  sh $TOMCAT_HOME/bin/startup.sh
+  
+  return 0
 }
 
 function stop() {
-  pid=$(tomcat_pid)
-  if [ -n "$pid" ]
-  then
-
-  echo "Stoping Tomcat"
-   sh $TOMCAT_HOME/bin/shutdown.sh
-
-   echo -n "Waiting for processes to exit ["
-   let kwait=200
-    count=0;
-    until [ `ps -p $pid | grep -c $pid` = '0' ] || [ $count -gt $kwait ]
-  do
-      echo -n ".";
-      sleep 1
-      let count=$count+1;
-    done
-    echo "Done]"
-
-    if [ $count -gt $kwait ]
-    then
-      echo "Killing processes ($pid) which didn't stop after $SHUTDOWN_WAIT seconds"
-      kill -9 $pid
-    fi
-  else
-    echo "Tomcat is not running"
-  fi
-
+  echo "Shutting down tomcat"
+  sh $TOMCAT_HOME/bin/shutdown.sh
   return 0
 }
 
