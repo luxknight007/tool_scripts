@@ -1,0 +1,87 @@
+
+#!bin/bash
+
+# Author Zoilo Dela Cruz
+# 1/1/2015
+
+INTEG_REPO='/opt/project/supplierintegrity-team_zoilo'
+LOCAL_REPO='/opt/zoilo/supplierintegrity-team_zoilo-zoilo'
+
+
+#DATA_MODEL
+function data_model() {
+	echo "Compiling DATA_MODEL"
+	cd $BUILD/DATA_MODEL/SupplierIntegModel; mvn install
+	return 0
+}
+
+function common() {
+	echo "Installing Common"
+	cd $BUILD/DATA_ACCESS_LAYER/Common; mvn install
+}
+
+function mongo_realm() {
+	echo "Intalling MongoRealm"
+	cd $BUILD/DATA_ACCESS_LAYER/MongodbRealm; mvn install
+}
+
+function supplier() {
+	echo "Package Supplier Integrity Apps"
+	cd $BUILD/DATA_ACCESS_LAYER/SupplierInteg; mvn -U eclipse:eclipse; mvn -Dmaven.test.skip=true clean package
+	return 0
+}
+
+function build_what() {
+	if [[ "$1" == "local" ]]; then
+		echo "Local build"
+		BUILD=$LOCAL_REPO
+		echo $BUILD
+		elif [[ "$1" == "integ" ]]; then
+		BUILD=$INTEG_REPO
+		echo $BUILD	
+	fi
+
+	return 0
+}
+
+function remove_project() {
+	echo "Delete existing project"
+	rm -rvf /opt/tomcat/webapps/Supplier*
+	echo "Done deleting project"
+	return 0
+
+}
+
+function deploy_project() {
+	echo "Deploying war files to tomcat"
+	cp -v $BUILD/DATA_ACCESS_LAYER/SupplierInteg/target/SupplierIntegrity.war /opt/tomcat/webapps
+	echo "Done deploying project"
+	return 0
+}
+
+case "$2" in
+ common)
+		build_what $1
+        common
+        ;;
+ mongo_realm)
+        mongo_realm
+        ;;
+ data_model)
+       build_what $1
+       data_model
+       ;;
+ supplier)
+	   build_what $1
+       supplier
+       tomcat stop
+       remove_project
+       deploy_project
+       tomcat start
+       ;;
+*)		
+        echo "Usage: $1 {local|integ} {common|mongo_realm|data_model|supplier}"
+        exit 1
+        ;;
+esac
+exit 0
